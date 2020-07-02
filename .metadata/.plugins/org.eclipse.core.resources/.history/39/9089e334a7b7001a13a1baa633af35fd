@@ -1,0 +1,13 @@
+package animal;
+
+public class Voar {
+
+	private String possue;
+
+	public String getPossue() {
+		return this.possue;
+	}
+
+	
+
+}

@@ -1,0 +1,32 @@
+package animal;
+
+public class Voar {
+
+	private int possue;
+	private String permite;
+
+//	public boolean getPossue(String possue) {
+//		if (this.possue == possue) {
+//			return true;
+//		} else {
+//			return false;
+//		}
+//	}
+
+	public boolean getPossue(int possue) {
+		if (this.possue == 1) {
+			return permite == "Sim";
+		} else {
+			return false;
+		}
+	}
+
+	public void setPossue(int possue) {
+		this.possue = possue;
+
+	}
+
+}
+
+//if (this.possue == "sim")
+//return this.possue = "Pode";

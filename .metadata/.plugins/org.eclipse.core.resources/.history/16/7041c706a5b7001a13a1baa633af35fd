@@ -1,0 +1,9 @@
+package animal;
+
+public class Voar {
+
+	private string senha;
+	
+	
+	
+}

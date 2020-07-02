@@ -1,0 +1,13 @@
+
+public class TesteReferencias {
+
+	private static void main(String[] args){
+		
+	
+		Gerente g1 = new Gerente();
+		
+		g1.setNome("Anannias");
+		
+		System.out.println(g1.getNome());
+	}
+}

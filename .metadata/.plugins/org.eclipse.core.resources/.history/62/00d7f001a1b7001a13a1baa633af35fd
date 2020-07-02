@@ -1,0 +1,9 @@
+package animal;
+
+public abstract interface CriaAsas {
+
+	public abstract int getAsas(int asas);
+
+	public abstract void setAsas(int asas);
+
+}

@@ -1,0 +1,23 @@
+package animal;
+
+public class GeraCachorro {
+
+	public static void main(String[] args) {
+
+		Cachorro cao = new Cachorro();
+
+		cao.setAlimenta("mastigando");
+		cao.setComunica("latindo");
+		cao.setLocomove("andando");
+		cao.setMembros(4);
+		cao.setGosta("pular");
+
+		System.out.println("Cão se alimenta " + cao.getAlimenta());
+		System.out.println("Cão se comunica " + cao.getComunica());
+		System.out.println("Cão se locomove " + cao.getLocomove());
+		System.out.println("Cão possui "      + cao.getMembros() + " membros");
+		System.out.println("Cão gosta "       + cao.getGosta());
+
+	}
+
+}

@@ -1,0 +1,7 @@
+
+public class Referencias {
+
+		Gerente g1 = new Gerente();
+		
+		g1.se
+}

@@ -1,0 +1,15 @@
+package animal;
+
+public class Voar {
+
+	private String possui;
+
+	public int getPossui() {
+		return possui;
+	}
+
+	public void setSenha(int possui) {
+		this.possui = possui;
+	}
+
+}

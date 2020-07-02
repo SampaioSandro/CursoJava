@@ -1,0 +1,22 @@
+package animal;
+
+public class GeraPato {
+
+	public static void main(String[] args) {
+
+		Pato pato = new Pato();
+
+		pato.setAlimenta("bicando");
+		pato.setComunica("falando");
+		pato.setLocomove("cantando");
+		pato.setMembros(2);
+		pato.setAsas(5);
+
+		System.out.println("pato se alimenta " + pato.getAlimenta());
+		System.out.println("pato se comunica " + pato.getComunica());
+		System.out.println("pato se locomove " + pato.getLocomove());
+		System.out.println("pato se possui "   + pato.getMembros() + " membros");
+
+	}
+
+}

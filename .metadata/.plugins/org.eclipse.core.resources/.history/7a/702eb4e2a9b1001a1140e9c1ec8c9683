@@ -1,0 +1,19 @@
+//Gerente eh um funcionário, Gerente herda da classe do funcionario
+public class Gerente {
+
+	private double salario;
+	private int senha;
+
+	public boolean autentica(int senha) {
+		if (this.senha == senha) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public double getBonificacao() {
+		return this.salario;
+	}
+
+}

@@ -1,0 +1,21 @@
+package animal;
+
+public class GeraGato {
+
+	public static void main(String[] args) {
+
+		Gato gato = new Gato();
+
+		gato.setAlimenta("mastigando");
+		gato.setComunica("mia");
+		gato.setLocomove("corre");
+		gato.setMembros(4);
+		
+		System.out.println("Gato se alimenta " + gato.getAlimenta());
+		System.out.println("Gato se comunica " + gato.getComunica());
+		System.out.println("Gato se locomove " + gato.getLocomove());
+		System.out.println("Gato se possui   " + gato.getMembros());
+		
+	}
+
+}

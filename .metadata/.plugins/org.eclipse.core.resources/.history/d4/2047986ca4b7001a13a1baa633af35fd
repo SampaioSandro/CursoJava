@@ -1,0 +1,8 @@
+package animal;
+
+public abstract interface Voar {
+
+	public abstract void setAsas();
+
+//	public abstract void voa();
+}

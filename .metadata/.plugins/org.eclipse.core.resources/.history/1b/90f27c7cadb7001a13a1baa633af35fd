@@ -1,0 +1,26 @@
+package animal;
+
+public class Voar {
+
+	private String possue;
+
+	public boolean autentica(int possue) {
+		if (this.possue == possue) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public String getPossue() {
+		return possue;
+	}
+
+	public void setPossue(String possue) {
+		this.possue = possue;
+	}
+
+}
+
+//if (this.possue == "sim")
+//return this.possue = "Pode";

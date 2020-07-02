@@ -1,0 +1,17 @@
+package animal;
+
+public class Pato extends AnimalDomestico implements CriaAsas {
+
+	@Override
+	public int getAsas() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setAsas(int asas) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

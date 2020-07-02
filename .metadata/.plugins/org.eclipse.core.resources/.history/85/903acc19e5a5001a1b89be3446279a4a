@@ -1,0 +1,359 @@
+package steps;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Assert;
+
+import com.google.gson.Gson;
+import com.ibm.icu.util.Calendar;
+import com.jcraft.jsch.JSchException;
+
+import io.restassured.RestAssured;
+import utils.BPData;
+import utils.BPUtils;
+import utils.ConnectionDB;
+
+public class BDDSteps {
+
+	public static String[] payloadMatriculas;
+	public static Map<String, Object> payloadMap;
+	public static String ambiente;
+	public static String operacao;
+	
+	public static String SQLSELECT = "select data_ultimo_reajuste_contribuicao_sobrevivencia from matricula where numero_matricula = {numeroMatricula}";
+	public static String SQLUPDATE = "update matricula set data_ultimo_reajuste_contribuicao_sobrevivencia = '{oldYear}-01-01 00:00:00' where numero_matricula = {numeroMatricula}";
+	public static String SQLDELETE = "delete from solicitacao_reajuste_controle WHERE numero_matricula =  {numeroMatricula}";
+	private static io.restassured.specification.RequestSpecification requestspecsAuth;
+	public static String userPassword = "15151515";
+	public BDDSteps() {
+
+	}
+
+	public void setAmbienteCenario() throws IOException {
+		Hooks.loadProperties();
+		Hooks.env = Hooks.prop.getProperty("environment");
+		ambiente = Hooks.prop.getProperty("branch");
+		switch (ambiente.toLowerCase()) {
+		case "local":
+			Hooks.authorization = Hooks.prop.getProperty("authorization_LOCAL");
+			RestAssured.baseURI = Hooks.prop.getProperty("URI_BASE_LOCAL");
+			StepDefinitions.urlApp = BPUtils.loadUrlApplication(operacao);
+			break;
+		case "dev_ecs":
+			String operacao2 = operacao + "_ecs";
+			Hooks.authorization = Hooks.prop.getProperty("authorization_DEV_ECS");
+			RestAssured.baseURI = Hooks.prop.getProperty("URI_BASE_DEV_ECS");
+			StepDefinitions.urlApp = BPUtils.loadUrlApplication(operacao2);
+			break;
+		case "hml_ecs":
+			String operacao3 = operacao + "_ecs";
+			Hooks.authorization = Hooks.prop.getProperty("authorization_HML_ECS");
+			RestAssured.baseURI = Hooks.prop.getProperty("URI_BASE_HML_ECS");
+			StepDefinitions.urlApp = BPUtils.loadUrlApplication(operacao3);
+			break;
+		case "dev":
+			Hooks.chaveApi = Hooks.prop.getProperty("chave_DEV");
+			RestAssured.baseURI = Hooks.prop.getProperty("URI_BASE_DEV");
+			StepDefinitions.urlApp = BPUtils.loadUrlApplication(operacao);
+			if (operacao.toLowerCase().contains("solicitacao")) {
+				Hooks.canalOperacao = Hooks.prop.getProperty("canalOperacao_1");
+				}
+				else {
+				Hooks.canalOperacao = Hooks.prop.getProperty("canalOperacao_20");	
+				}
+			break;
+		case "hml":
+			RestAssured.baseURI = Hooks.prop.getProperty("URI_BASE_HML");
+			StepDefinitions.urlApp = BPUtils.loadUrlApplication(operacao);
+			if (operacao.toLowerCase().contains("solicitacao")) {
+				Hooks.canalOperacao = Hooks.prop.getProperty("canalOperacao_1");
+				Hooks.chaveApi = Hooks.prop.getProperty("chave_HML_1");
+				}
+				else {
+				Hooks.canalOperacao = Hooks.prop.getProperty("canalOperacao_20");
+				Hooks.chaveApi = Hooks.prop.getProperty("chave_HML_20");
+				}
+			break;
+		default:
+			Assert.fail("Erro ao carregar as variáveis para o ambiente!");
+		}
+		Assert.assertTrue(!StepDefinitions.urlApp.isEmpty());
+//		System.out.println("A chave é: " + Hooks.chaveApi);
+//		System.out.println("A authorization é: " + Hooks.authorization);
+//		System.out.println("A URL é: " + StepDefinitions.urlApp);
+	}
+
+	public static String montaUrlGet(String cenario) {
+		String replaceURLVariavel = StepDefinitions.urlApp;
+		try {
+			BPData.searchCsvLine(cenario);
+		if(replaceURLVariavel.contains(urlVariavel(cenario))) {
+			replaceURLVariavel = replaceVariavel(cenario);
+			return replaceURLVariavel;
+		}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static String urlVariavel(String cenario) {
+		String variavelUrl = null;
+		cenario = BPUtils.removerAspas(cenario);
+		if (cenario.toLowerCase().contains("lista_matricula") || cenario.toLowerCase().contains("aporteextra")) {
+			variavelUrl = "{cpf}";	
+		}
+		else if(cenario.toLowerCase().contains("slider")) {
+			if(ambiente.toLowerCase().equalsIgnoreCase("dev_ecs") || ambiente.toLowerCase().equalsIgnoreCase("hml_ecs")) {
+				variavelUrl = "{numeroMatricula}";
+			}	
+			else
+				variavelUrl = "{plan-number}";	
+		}
+		return variavelUrl;
+	}
+	
+	public static String replaceVariavel(String cenario) {
+		String variavel = StepDefinitions.urlApp;
+		if (cenario.toLowerCase().contains("lista_matricula") || cenario.toLowerCase().contains("aporteextra")) {
+			variavel = variavel.replace("{cpf}",BPData.values[2]);	
+			return variavel;
+			}
+		else if (cenario.toLowerCase().contains("slider")) {
+			if(ambiente.toLowerCase().equalsIgnoreCase("dev_ecs")) {
+				variavel = variavel.replace("{numeroMatricula}",BPData.values[2]);
+			}else
+				variavel = variavel.replace("{plan-number}",BPData.values[2]);	
+			return variavel;
+		}
+		return null;
+	}
+	
+	public static Map<String, Object> montaCenario(String cenario) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, JSchException {
+		Map<String, Object> payloadMontado = new HashMap<>();
+		String arrLinha = null;
+		cenario = BPUtils.removerAspas(cenario);
+		HashMap<String, Object> linha = new HashMap<>();
+		try {
+			linha = BPData.searchCsvLine(cenario);
+			//System.out.println("A linha encontrada é:" + linha);
+			payloadMontado.clear();
+			if (cenario.toLowerCase().contains("elegive")) {
+				if (BPData.values.length == 2) {
+				payloadMontado = geraMapMatricula();}
+				else {
+				arrLinha =  linha.get("matriculas").toString();
+				ResponseValidation.inputMatriculas = arrLinha;
+				payloadMatriculas = arrLinha.split(",");
+				payloadMontado = geraMapMatricula();
+				}
+			}
+			else if (cenario.toLowerCase().contains("simulacao")) {
+				payloadMontado = geraMapSimulacao();
+			}
+			else if (cenario.toLowerCase().contains("incremento")) {
+				payloadMontado = geraMapIncremento();
+			}
+			else if (cenario.toLowerCase().contains("detalhada")) {
+				payloadMontado = geraMapSimulacao();
+			}
+			else if (cenario.toLowerCase().contains("solicitacao")) {
+				payloadMontado = geraMapSolicitacao();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	return payloadMontado;
+	}
+
+	private static Map<String, Object> geraMapSolicitacao() throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, JSchException {
+		Map<String, Object> payLoadFinal = new HashMap<>();
+		if (BPData.values.length == 2) {
+			payLoadFinal = payloadNulo();
+			//System.out.println("PAYLOAD INFORMAÇÃO VAZIAS: " + payLoadFinal);
+		}else {
+			if(StepDefinitions.cenarioFixo.toLowerCase().contains("cliente") 
+					|| StepDefinitions.cenarioFixo.toLowerCase().contains("terceiro")
+						|| StepDefinitions.cenarioFixo.toLowerCase().contains("zerado")) {
+				ajusteMassaDeDados(BPData.values[2]);
+			}
+			try {payLoadFinal.put("numeroMatricula", Integer.parseInt(BPData.values[2]));}
+			catch(Exception e) {payLoadFinal.put("numeroMatricula",  BPData.values[2].toString());}
+			try {payLoadFinal.put("valorContribuicaoSobrevivencia",  new BigDecimal(BPData.values[3]));}
+			catch(Exception e) {payLoadFinal.put("valorContribuicaoSobrevivencia",  BPData.values[3].toString());}
+			try {payLoadFinal.put("flagDuploSim",  BPData.values[4].toString());}
+			catch(Exception e) {payLoadFinal.put("flagDuploSim",  BPData.values[4].toString());}
+			//System.out.println("PAYLOAD INFORMAÇÃO: "+ payLoadFinal);
+		}
+		return payLoadFinal;
+	}
+
+	public static Map<String, Object> geraMapSimulacao() throws IOException { //payload simulacao é o mesmo que simulacaodetalhada
+		Map<String, Object> payLoadFinal = new HashMap<>();
+		if (BPData.values.length == 2) {
+			payLoadFinal = payloadNulo();
+			//System.out.println("PAYLOAD INFORMAÇÃO VAZIAS: " + payLoadFinal);
+		}else {
+			try {payLoadFinal.put("numeroMatricula",      Integer.parseInt(BPData.values[2]));}
+			catch(Exception e) {payLoadFinal.put("numeroMatricula",  BPData.values[2].toString());}
+			try {payLoadFinal.put("valorSaldo",           new BigDecimal(BPData.values[3]));}
+			catch(Exception e) {payLoadFinal.put("valorSaldo",  BPData.values[3].toString());}
+			try {payLoadFinal.put("valorContribuicao",    new BigDecimal(BPData.values[4]));}
+			catch(Exception e) {payLoadFinal.put("valorContribuicao",  BPData.values[4].toString());}
+			try {payLoadFinal.put("idadeSaida", 			 Integer.parseInt(BPData.values[5]));}
+			catch(Exception e) {payLoadFinal.put("idadeSaida",  BPData.values[5].toString());}
+				payLoadFinal.put("dataSaida",            BPData.values[6]);
+				payLoadFinal.put("dataNascimento",       BPData.values[7]);
+			//System.out.println("PAYLOAD INFORMAÇÃO: "+ payLoadFinal);
+		}
+		return payLoadFinal;
+	}
+	
+	public static Map<String, Object> geraMapMatricula() throws IOException {
+		Map<String, Object> payLoadFinal = new HashMap<>();
+		List<Map<?, ?>> listaMatriculas = new ArrayList<Map<?, ?>>();
+		Integer i = 0;
+		if (BPData.values.length == 2) {
+			payLoadFinal = payloadNulo();
+			//System.out.println("PAYLOAD INFORMAÇÃO VAZIAS: " + payLoadFinal);
+		}else {
+			while( i < payloadMatriculas.length){
+				listaMatriculas.add(montaItemListaMatriculas(i));
+				i++;
+				//System.out.println("listaMatriculas: " + listaMatriculas);
+				}		
+			payLoadFinal.put("matriculas", listaMatriculas);
+			//System.out.println("PAYLOAD INFORMAÇÃO:"+ payLoadFinal);
+		}
+		return payLoadFinal;
+	}	 
+	
+	public static Map<String, Object> geraMapMatriculasValidas() throws IOException {
+		Map<String, Object> payLoadFinal = new HashMap<>();
+		List<Map<?, ?>> listaMatriculas = new ArrayList<Map<?, ?>>();
+		Integer i = 0;
+		if (BPData.values.length == 2) {
+			payLoadFinal = payloadNulo();
+			//System.out.println("PAYLOAD INFORMAÇÃO VAZIAS: " + payLoadFinal);
+		}else {
+			while( i < payloadMatriculas.length){
+				listaMatriculas.add(montaItemListaMatriculas(i));
+				i++;
+				//System.out.println("listaMatriculas: " + listaMatriculas);
+				}		
+			payLoadFinal.put("matriculas", listaMatriculas);
+			//System.out.println("PAYLOAD INFORMAÇÃO:"+ payLoadFinal);
+		}
+		return payLoadFinal;
+	}	 
+	
+	public static Map<String, Object> montaItemListaMatriculas(int posicaonalista){
+		Map<String, Object> itemListaMatricula = new HashMap<>();
+		try {itemListaMatricula.put("numeroMatricula", Integer.parseInt(payloadMatriculas[posicaonalista]));}
+			catch(Exception e) {itemListaMatricula.put("numeroMatricula", payloadMatriculas[posicaonalista].toString());
+		}
+		return itemListaMatricula;		
+	}
+	
+	public static Map<String, Object> geraMapIncremento() {
+		Map<String, Object> payLoadFinal = new HashMap<>();
+		if (BPData.values.length == 2) {
+			payLoadFinal.put("contribuicaoAtual", null);
+			payLoadFinal.put("dtUltimoReajuste", null);
+			//System.out.println("PAYLOAD INFORMAÇÃO VAZIAS: " + payLoadFinal);
+		}else {
+			try {payLoadFinal.put("contribuicaoAtual", new BigDecimal(BPData.values[2]));}
+			catch(Exception e) {payLoadFinal.put("contribuicaoAtual", BPData.values[2].toString());}
+			try {payLoadFinal.put("dtUltimoReajuste",  (BPData.values[3]));}
+			catch(Exception e) {payLoadFinal.put("dtUltimoReajuste",  BPData.values[3]);}
+			//System.out.println("PAYLOAD INFORMAÇÃO: "+ payLoadFinal);
+		}
+		return payLoadFinal;
+	}
+	
+	public static Map<String, Object> payloadNulo() throws IOException { //payload simulacao é o mesmo que simulacaodetalhada
+		Map<String, Object> payLoadFinal = new HashMap<>();
+		Integer i = 2;
+		while (i < BPData.cabecalhocsv.length) {
+			payLoadFinal.put(BPData.cabecalhocsv[i], null);
+			i++;
+		}
+		return payLoadFinal;
+	}
+		
+	public static void ajusteMassaDeDados(String numeroMatricula) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException, JSchException {
+		Calendar cal = Calendar.getInstance();
+		Calendar prevYear = Calendar.getInstance();
+		int year = cal.get(Calendar.YEAR);
+	    prevYear.add(Calendar.YEAR, -1);
+	    int oldYear = prevYear.get(Calendar.YEAR);
+	    Boolean update = false;
+		String sqlUpdate = SQLUPDATE;
+		String sqlSelect = SQLSELECT;
+		String sqlDelete = SQLDELETE;
+	
+		ConnectionDB.nomeDoBanco("matricula");
+		Statement consulta = ConnectionDB.abreConexao();
+		sqlSelect = sqlSelect.replace("{numeroMatricula}", numeroMatricula);
+		sqlUpdate = sqlUpdate.replace("{oldYear}", Integer.toString(oldYear));
+		sqlUpdate = sqlUpdate.replace("{numeroMatricula}", numeroMatricula);
+		sqlDelete = sqlDelete.replace("{numeroMatricula}", numeroMatricula);
+		         
+		ResultSet dataUltimoReajuste = consulta.executeQuery(sqlSelect);
+		while(dataUltimoReajuste.next()) {
+			if (dataUltimoReajuste.getString(1) == null || dataUltimoReajuste.getString(1).isEmpty()) {
+			}
+			else if (dataUltimoReajuste.getString(1).contains(Integer.toString(year))) {
+			update = true;
+			}
+		 }
+		if (update) 
+		consulta.executeUpdate(sqlUpdate);
+		ConnectionDB.fechaConexao();
+		ConnectionDB.nomeDoBanco("upselling");
+		Statement delete = ConnectionDB.abreConexao();
+		delete.executeUpdate(sqlDelete);
+
+		ConnectionDB.fechaConexao();
+	}
+	
+	public static void clientCredention() throws IOException {
+		if (StepDefinitions.cenarioFixo.toLowerCase().contains("bff") == false) {
+			return;
+		}
+		
+		requestspecsAuth = BPUtils.setupConnectionBff();
+		Map<String, Object> payloadMontado = new HashMap<>();
+		String cpf = null;
+        String authGerado = null;
+        String clientIdResource = "6c9077e2e69a567e749eed01b092098ac2208e5dbdf3e19549aaa222796d4231";
+        String clientSecretResource = "Hhz7MrIhZoz_E_kOFB6UO0dNDBZnD6J-VOp9ozWr8Zs";
+        String urlResource = "https://ecs.api-hml.brasilprev.com.br/cerberus-auth/oauth2/resource-password-grant";
+        BPData.searchCsvLine(StepDefinitions.cenarioFixo);
+		
+        cpf =  BPData.values[2].toString();
+    	payloadMontado.put("client_id", clientIdResource);
+        payloadMontado.put("client_secret", clientSecretResource);
+        payloadMontado.put("grant_type", "password");
+        payloadMontado.put("username", cpf);
+        payloadMontado.put("password", userPassword);
+        
+        Gson g = new Gson();
+		String json = g.toJson(payloadMontado);
+		ResponseValidation.restAssuredResponse = requestspecsAuth.body(json).post(urlResource);
+		//BPUtils.printResponse(ResponseValidation.restAssuredResponse.prettyPrint(), StepDefinitions.cenarioFixo);
+		authGerado = ResponseValidation.restAssuredResponse.body().path("access_token");
+		Hooks.authorization = authGerado; 
+    
+		// System.out.println("AUTENTICAÇÃO PARA SERVIÇO DE " + operacao);	 
+    System.out.println("Authorization Gerado: Bearer " + authGerado);
+   }
+}

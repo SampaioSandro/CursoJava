@@ -1,0 +1,21 @@
+package animal;
+
+public class GeraPassaroPreto {
+
+	public static void main(String[] args) {
+
+		PassaroPreto preto = new PassaroPreto();
+
+		preto.setAlimenta("bicando");
+		preto.setComunica("cantando");
+		preto.setLocomove("andando");
+		preto.setMembros(2);
+		
+		System.out.println("preto se alimenta " + preto.getAlimenta());
+		System.out.println("preto se comunica " + preto.getComunica());
+		System.out.println("preto se locomove " + preto.getLocomove());
+		System.out.println("preto se possui "   + preto.getMembros() + " membros");
+		
+	}
+
+}

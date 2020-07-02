@@ -1,0 +1,21 @@
+package animal;
+
+public class GeraGaviao {
+
+	public static void main(String[] args) {
+
+		Gaviao gaviao = new Gaviao();
+
+		gaviao.setAlimenta("bicando");
+		gaviao.setComunica("falando");
+		gaviao.setLocomove("andando");
+		gaviao.setMembros(2);
+		
+		System.out.println("gaviao se alimenta " + gaviao.getAlimenta());
+		System.out.println("gaviao se comunica " + gaviao.getComunica());
+		System.out.println("gaviao se locomove " + gaviao.getLocomove());
+		System.out.println("gaviao se possui " + gaviao.getMembros() + " membros");
+		
+	}
+
+}

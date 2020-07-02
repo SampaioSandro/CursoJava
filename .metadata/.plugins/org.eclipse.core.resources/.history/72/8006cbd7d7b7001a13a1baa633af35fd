@@ -1,0 +1,16 @@
+package animal;
+
+public class PassaroPreto extends AnimalDomestico implements CriaAsas {
+
+	private int asas;
+
+	@Override
+	public int getAsas() {
+		return this.asas;
+	}
+
+	@Override
+	public void setAsas(int asas) {
+		this.asas = asas;
+	}
+}

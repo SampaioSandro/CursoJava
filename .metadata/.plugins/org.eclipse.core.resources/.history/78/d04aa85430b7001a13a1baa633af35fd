@@ -1,0 +1,14 @@
+package animal;
+
+public abstract class AnimalDomestico {
+
+	private String locomove;
+	private String comunica;
+	private String nome;
+	private String cpf;
+	private String alimenta;
+	private int membros;
+
+	
+	
+}

@@ -1,0 +1,14 @@
+package animal;
+
+public class Gato extends AnimalDomestico {
+
+	private String comporta;
+	
+	private void setComporta() {
+		return;
+	}
+
+	private void getComporta() {
+		return this.comporta;
+	}
+}

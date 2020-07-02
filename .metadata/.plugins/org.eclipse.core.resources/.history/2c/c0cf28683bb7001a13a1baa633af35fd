@@ -1,0 +1,15 @@
+package animal;
+
+public abstract class CriaAsas implements Voar {
+
+	private int asas;
+
+	public int getAsas() {
+		return asas;
+	}
+
+	public void setAsas(int asas) {
+		this.asas = asas;
+	}
+
+}

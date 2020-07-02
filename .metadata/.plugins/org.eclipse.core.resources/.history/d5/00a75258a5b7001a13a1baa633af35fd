@@ -1,0 +1,17 @@
+package animal;
+
+public class Voar {
+
+	private string senha;
+
+	public string getSenha() {
+		return senha;
+	}
+
+	public void setSenha(string senha) {
+		this.senha = senha;
+	}
+	
+	
+	
+}

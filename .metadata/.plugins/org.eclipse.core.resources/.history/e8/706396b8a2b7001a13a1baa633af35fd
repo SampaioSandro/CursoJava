@@ -1,0 +1,5 @@
+package animal;
+
+public class Pato extends AnimalDomestico {
+
+}

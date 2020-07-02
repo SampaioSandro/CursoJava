@@ -1,0 +1,26 @@
+package animal;
+
+public class Papagaio extends AnimalDomestico implements CriaAsas {
+
+	private String costume;
+	private int asas;
+
+	public void setCostume(String costume) {
+		this.costume = costume;
+	}
+
+	public String getCostume() {
+		return costume;
+	}
+
+	@Override
+	public int getAsas() {
+		return this.asas;
+	}
+
+	@Override
+	public void setAsas(int asas) {
+
+	}
+
+}

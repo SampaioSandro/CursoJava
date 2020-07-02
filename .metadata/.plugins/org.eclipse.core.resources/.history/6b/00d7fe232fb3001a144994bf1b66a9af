@@ -1,0 +1,11 @@
+
+public class TesteReferencias {
+
+	private static void main(String[] args){
+		// TODO Auto-generated method stub
+
+	}
+		Gerente g1 = new Gerente();
+		
+		g1.se
+}

@@ -1,0 +1,28 @@
+
+public class Teste {
+
+	public static void main(String[] args) {
+
+		Gerente f1 = new Gerente();
+		f1.setNome("Leite, Ronaldo");
+        f1.setCpf("091.295.178-85");
+        f1.setSalario(3000.00);
+        
+        System.out.println(f1.getTipo());
+        System.out.println(f1.getBonificacao());
+	
+        Gerente f2 = new Gerente();
+        f2.setTipo(1);
+        f2.setSalario(5000.00);
+        System.out.println(f2.getTipo());
+        System.out.println(f2.getBonificacao());
+        
+        Gerente f3 = new Gerente();
+        f3.setTipo(2);
+        f3.setSalario(7000.00);
+        System.out.println(f3.getTipo());
+        System.out.println(f3.getBonificacao());
+	
+	}
+
+}

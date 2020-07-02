@@ -1,0 +1,21 @@
+
+public class TesteFuncionario {
+
+	public static void main(String[] args) {
+		
+		Funcionario sampaio = new Funcionario();
+        sampaio.setNome("Sampaio, Sandro");
+        sampaio.setCpf("091.295.178-85");
+        sampaio.setSalario(1000.00);
+        
+		System.out.println(sampaio.getNome());
+		System.out.println(sampaio.getBonificacao());
+		
+		sampaio.salario = 999.00;
+		
+		
+		
+		
+	}
+
+}
